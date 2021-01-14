@@ -29,9 +29,9 @@ gem 'jbuilder', '~> 2.7'
 gem 'sprockets-rails', require: 'sprockets/railtie'
 
 # fonts
-gem 'fontawesome-rails', '~> 4.0', '>= 4.0.3.2'
-# use Postgres on Heroku production and localhost
+gem "font-awesome-rails"
 
+# use Postgres on Heroku production and localhost
 gem 'pg'
 
 # breadcrumbs
