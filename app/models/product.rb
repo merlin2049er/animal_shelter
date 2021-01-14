@@ -1,0 +1,97 @@
+# frozen_string_literal: true
+
+#require 'elasticsearch'
+#require 'elasticsearch/model'
+
+class Product < ActiveRecord::Base
+#  extend FriendlyId
+#  friendly_id :title, use: :slugged
+
+  is_impressionable
+  has_rich_text :body
+
+#  include Searchable
+
+  acts_as_commontable dependent: :destroy
+
+  after_initialize :set_defaults
+
+#  after_touch { __elasticsearch__.index_document }
+
+#  belongs_to :cart, optional: true
+  belongs_to :category
+  has_many :photos
+  accepts_nested_attributes_for :photos,
+                                reject_if: :all_blank, allow_destroy: true
+
+  validates_presence_of :title
+  validates_presence_of :category_id
+  validates_presence_of :picurl
+
+  validates_presence_of :body
+#  validates_presence_of :qty
+  validates_presence_of :price
+
+#  validates_presence_of :msrp
+  validates_presence_of :startdate
+  validates_presence_of :enddate
+  validates_presence_of :age
+  validates_presence_of :sex
+  validates_presence_of :weight
+
+  validates_length_of :title, maximum: 35
+
+  validates_date :startdate,
+                 before: :enddate,
+                 before_message: 'must be at before the end date.'
+
+  validates_numericality_of :price, greater_than: 0
+  #validates_numericality_of :qty, greater_than: 0
+
+  def commentable_title
+    'Undefined Post Title'
+  end
+
+  def commentable_url
+    '#'
+  end
+
+  def commentable_state
+    'published'
+  end
+
+  def set_defaults
+
+    self.price ||= 0.0
+    self.picurl ||=
+      'https://res.cloudinary.com/dlfodsgbd/image/upload/v1590070578/TippingPoint/photo_not_available.png'
+
+  end
+
+  scope :published,
+        lambda {
+          where(draft: false).where(active: true).where(
+            '? BETWEEN startdate AND enddate',
+            Date.today)
+        }
+
+  scope :most_recent, ->(limit) { order('startdate desc').limit(limit) }
+#  scope :ending_soonest, ->(limit) { order('startdate asc').limit(limit) }
+
+  def self.search(query)
+    if !query.blank?
+      __elasticsearch__.search(
+        {
+          query: { multi_match: { query: query, fields: %w[title body.body] } },
+          highlight: {
+            pre_tags: ['<em class="label label-highlight">'],
+            post_tags: %w[</em>],
+            fields: { "title": {}, "body.body": {} }
+          }
+        }
+      )
+    else
+      Product.published
+    end
+  end
+end

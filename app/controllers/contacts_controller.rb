@@ -1,0 +1,47 @@
+# frozen_string_literal: true
+
+class ContactsController < ApplicationController # GET /contacts/new
+  def new
+    @contact = Contact.new
+  end
+
+  # POST /contacts
+  # POST /contacts.json
+  def create
+    @contact = Contact.new(contact_params)
+
+    if @contact.save
+      # redirect_to root_path
+      redirect_to pages_thankyou_path
+      name = params[:contact][:name]
+      email = params[:contact][:email]
+      message = params[:contact][:message]
+
+
+      ContactMailer.contact_email(
+        name,
+        email,
+        message
+      ).deliver
+
+    else
+
+       render pages_contact_path, status: :unprocessable_entity
+    #  redirect_to pages_contact_path
+
+    end
+  end
+
+  private
+
+  # Use callbacks to share common setup or constraints between actions.
+
+  # Only allow a list of trusted parameters through.
+  def contact_params
+    params.require(:contact).permit(
+      :name,
+      :email,
+      :message
+    )
+  end
+end
