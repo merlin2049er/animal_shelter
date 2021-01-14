@@ -259,7 +259,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  bootsnap (>= 1.4.2)
+  bootsnap
   breadcrumbs_on_rails
   byebug
   capybara (>= 2.15)
